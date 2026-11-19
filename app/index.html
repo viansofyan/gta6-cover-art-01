@@ -1,90 +1,109 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" href="data:,">
-<title>Neon Coast Cover Studio — GTA-style cover maker</title>
+<title>Neon Coast Cover Studio</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="topbar">
-  <div>
-    <h1>Neon Coast <span>Cover Studio</span></h1>
-    <p class="tagline">Turn your photos + a caption into multi-panel poster cover art. Offline — your photos never leave this machine.</p>
+  <div class="brand">
+    <span class="brand-mark">NC</span>
+    <div>
+      <h1>Neon Coast Cover Studio</h1>
+      <p>Turn a photo and a caption into multi-panel poster cover art.</p>
+    </div>
   </div>
   <div class="top-actions">
-    <button id="undoBtn" type="button" disabled>Undo</button>
-    <button id="redoBtn" type="button" disabled>Redo</button>
+    <button type="button" id="undo-btn" disabled>Undo</button>
+    <button type="button" id="redo-btn" disabled>Redo</button>
+    <button type="button" id="export-btn" class="primary">Export PNG</button>
   </div>
 </header>
 
-<main class="layout">
-  <section id="stage" class="stage" aria-label="Cover preview">
-    <canvas id="preview" width="1080" height="1080"></canvas>
-    <div id="panelOverlay" aria-hidden="true"></div>
-    <p class="drop-hint">Drop photos here, or use the file picker below. Click a numbered panel to select it; click the bare canvas to cycle panels.</p>
+<main class="workspace">
+  <section class="preview-column" aria-label="Live preview">
+    <div class="preview-frame">
+      <canvas id="preview-canvas" width="640" height="640" aria-label="Cover preview. Click a panel to select it."></canvas>
+      <p class="hint">Click a panel to select it. Drag a photo file onto the preview to add it.</p>
+    </div>
+    <p id="preview-size" class="preview-size">Square 1080 x 1080</p>
+    <p id="status-line" class="status" role="status">Loading samples…</p>
   </section>
 
   <aside class="controls" aria-label="Cover controls">
-    <section class="group">
-      <h2>Photos</h2>
-      <div class="row">
-        <label class="file-btn">Add photos
-          <input id="fileInput" type="file" accept="image/*" multiple hidden>
-        </label>
-      </div>
-      <div id="thumbs" class="thumbs"></div>
-      <p class="hint">Click a thumbnail to place that photo in the selected panel.</p>
+    <section class="card">
+      <h2>1 · Photos</h2>
+      <label class="file-button" for="file-input">Add photos from your machine</label>
+      <input type="file" id="file-input" accept="image/*" multiple>
+      <p class="note">JPG or PNG, as many as you like. Photos stay on your machine — nothing is uploaded.</p>
+      <div id="photo-strip" class="photo-strip"></div>
+      <p class="note">Click a thumbnail to put that photo in the selected panel.</p>
     </section>
 
-    <section class="group">
-      <h2>Layout</h2>
-      <div id="layoutBtns" class="btn-row"></div>
+    <section class="card">
+      <h2>2 · Layout</h2>
+      <div id="layout-row" class="button-row"></div>
+      <label class="field-label" for="layout-select">Layout (same choice)</label>
+      <select id="layout-select">
+        <option value="grid">Poster Grid</option>
+        <option value="hero">Hero + Three</option>
+        <option value="single">Full Bleed</option>
+        <option value="snapshots">Snapshots</option>
+      </select>
     </section>
 
-    <section class="group">
-      <h2>Colour grade</h2>
-      <div id="gradeBtns" class="btn-row"></div>
+    <section class="card">
+      <h2>3 · Selected panel</h2>
+      <p class="note" id="panel-label">Panel 1 of 4</p>
+      <label class="field-label" for="panel-photo">Photo in this panel</label>
+      <select id="panel-photo"></select>
+      <button type="button" id="fill-all-btn">Fill every panel with this photo</button>
+      <label class="field-label" for="zoom-slider">Zoom <span class="range-hint">1× to 3×</span></label>
+      <input type="range" id="zoom-slider" min="1" max="3" step="0.05" value="1">
+      <label class="field-label" for="panx-slider">Move left / right</label>
+      <input type="range" id="panx-slider" min="0" max="1" step="0.01" value="0.5">
+      <label class="field-label" for="pany-slider">Move up / down</label>
+      <input type="range" id="pany-slider" min="0" max="1" step="0.01" value="0.5">
     </section>
 
-    <section class="group">
-      <h2>Lettering</h2>
-      <label>Title <input id="titleInput" type="text" maxlength="40" value="NEON COAST"></label>
-      <label>Subtitle <input id="subtitleInput" type="text" maxlength="60" value="Vice City nights"></label>
-      <label>Badge <input id="badgeInput" type="text" maxlength="12" value="GTA VI"></label>
+    <section class="card">
+      <h2>4 · Lettering</h2>
+      <label class="field-label" for="title-input">Poster title</label>
+      <input type="text" id="title-input" value="NEON COAST" maxlength="40">
+      <label class="field-label" for="subtitle-input">Subtitle</label>
+      <input type="text" id="subtitle-input" value="where the night never ends" maxlength="60">
+      <label class="field-label" for="badge-input">Ribbon badge</label>
+      <input type="text" id="badge-input" value="VICE CITY" maxlength="24">
+      <p class="note">The title shrinks to fit the cover width automatically.</p>
     </section>
 
-    <section class="group">
-      <h2>Selected panel — <span id="panelLabel">Panel 1 of 4</span></h2>
-      <label>Photo
-        <select id="panelPhoto"></select>
-      </label>
-      <label>Zoom <span id="zoomVal" class="val">1.0×</span>
-        <input id="zoomRange" type="range" min="1" max="3" step="0.05" value="1">
-      </label>
-      <label>Position X <span id="xVal" class="val">50%</span>
-        <input id="xRange" type="range" min="0" max="1" step="0.01" value="0.5">
-      </label>
-      <label>Position Y <span id="yVal" class="val">50%</span>
-        <input id="yRange" type="range" min="0" max="1" step="0.01" value="0.5">
-      </label>
-      <button id="fillAllBtn" type="button">Fill every panel with this photo</button>
+    <section class="card">
+      <h2>5 · Colour grade</h2>
+      <div id="grade-row" class="button-row grades"></div>
     </section>
 
-    <section class="group">
-      <h2>Export PNG</h2>
-      <div class="row">
-        <select id="exportSize" aria-label="Export size"></select>
-        <button id="exportBtn" type="button" class="primary">Export PNG</button>
-      </div>
-      <p id="status" class="status" role="status">Ready.</p>
+    <section class="card">
+      <h2>6 · Export</h2>
+      <label class="field-label" for="size-select">Export size</label>
+      <select id="size-select">
+        <option value="square">Square — 1080 × 1080</option>
+        <option value="portrait">Portrait — 1080 × 1350</option>
+        <option value="wide">Widescreen — 1920 × 1080</option>
+      </select>
+      <p class="note">One click downloads the PNG. The preview shows exactly what the file will look like.</p>
     </section>
-
-    <p class="fineprint">All art is original and procedural — no Rockstar logo, artwork or fonts. System fonts only; no network requests.</p>
   </aside>
 </main>
 
-<script type="module" src="src/main.js"></script>
+<footer class="footnote">
+  <p>Neon Coast Cover Studio — an original offline app. All artwork and lettering are original; no game logos, artwork or fonts are used. Photos are read on your own machine and never uploaded.</p>
+</footer>
+
+<script src="src/grades.js"></script>
+<script src="src/cover.js"></script>
+<script src="src/shots.js"></script>
+<script src="src/main.js"></script>
 </body>
 </html>
