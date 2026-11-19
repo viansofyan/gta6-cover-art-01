@@ -1,65 +1,71 @@
 // Neon Coast Cover Studio — colour grades.
-// Each grade is a wash that sits over every panel: a sky gradient, a
-// duotone tint, grain strength and vignette strength, plus the lettering
-// accent colours the grade pairs with. All values are procedural; no
-// external assets, no Rockstar artwork.
-export const GRADES = {
-  sunset: {
-    label: 'Vice sunset',
-    skyTop: '#2b1055',
-    skyMid: '#e4487a',
-    skyBottom: '#ff9a3d',
-    tint: 'rgba(255, 90, 60, 0.16)',
-    tintMode: 'overlay',
-    grain: 0.10,
-    vignette: 0.34,
-    accent: '#ff5e3a',
-    titleFill: '#fff7ec',
-    titleStroke: '#1c0b2e',
-    subGlow: '#ff7ad9',
-  },
-  neon: {
-    label: 'Neon night',
-    skyTop: '#05001f',
-    skyMid: '#1b0f54',
-    skyBottom: '#0a2e5e',
-    tint: 'rgba(0, 229, 255, 0.14)',
-    tintMode: 'screen',
-    grain: 0.12,
-    vignette: 0.42,
-    accent: '#00e5ff',
-    titleFill: '#eafcff',
-    titleStroke: '#12003a',
-    subGlow: '#ff2e88',
-  },
-  gold: {
-    label: 'Golden hour',
-    skyTop: '#3d1e00',
-    skyMid: '#c96a1e',
-    skyBottom: '#ffd166',
-    tint: 'rgba(255, 190, 60, 0.18)',
-    tintMode: 'soft-light',
-    grain: 0.08,
-    vignette: 0.30,
-    accent: '#ffb703',
-    titleFill: '#fffbe8',
-    titleStroke: '#2a1500',
-    subGlow: '#ff8c42',
-  },
-  noir: {
-    label: 'Noir',
-    skyTop: '#0b0b0e',
-    skyMid: '#23232b',
-    skyBottom: '#4a4a55',
-    tint: 'rgba(255, 255, 255, 0.10)',
-    tintMode: 'overlay',
-    grain: 0.16,
-    vignette: 0.55,
-    accent: '#e8e8e8',
-    titleFill: '#f5f5f5',
-    titleStroke: '#000000',
-    subGlow: '#b8b8ff',
-  },
-};
+// Each grade is a small palette the render engine reads: two wash colours
+// painted as a vertical gradient over every panel, a tint colour blended
+// over the photo, a grain amount, a vignette strength, and a flag that
+// turns the photo into a duotone before the tint goes on.
 
-export const GRADE_IDS = Object.keys(GRADES);
+const GRADES = [
+  {
+    id: 'sunset',
+    label: 'Vice Sunset',
+    washTop: '#ff7a3d',
+    washBottom: '#c2185b',
+    washAlpha: 0.22,
+    tint: '#ff9e5e',
+    tintAlpha: 0.10,
+    grain: 0.05,
+    vignette: 0.42,
+    duotone: false,
+    duotoneInk: '#2b1030',
+    duotonePaper: '#ffd9a0',
+  },
+  {
+    id: 'neon',
+    label: 'Neon Night',
+    washTop: '#00e5ff',
+    washBottom: '#ff2ea6',
+    washAlpha: 0.26,
+    tint: '#7b2fff',
+    tintAlpha: 0.14,
+    grain: 0.06,
+    vignette: 0.50,
+    duotone: false,
+    duotoneInk: '#0a0618',
+    duotonePaper: '#b8f6ff',
+  },
+  {
+    id: 'golden',
+    label: 'Golden Hour',
+    washTop: '#ffc94d',
+    washBottom: '#ff6b35',
+    washAlpha: 0.20,
+    tint: '#ffb347',
+    tintAlpha: 0.12,
+    grain: 0.04,
+    vignette: 0.34,
+    duotone: false,
+    duotoneInk: '#241505',
+    duotonePaper: '#ffe9b0',
+  },
+  {
+    id: 'noir',
+    label: 'Noir',
+    washTop: '#9aa3b2',
+    washBottom: '#101014',
+    washAlpha: 0.18,
+    tint: '#8f9bb0',
+    tintAlpha: 0.08,
+    grain: 0.09,
+    vignette: 0.58,
+    duotone: true,
+    duotoneInk: '#0b0b10',
+    duotonePaper: '#e8e8e8',
+  },
+];
+
+function gradeById(id) {
+  for (const grade of GRADES) {
+    if (grade.id === id) return grade;
+  }
+  return GRADES[0];
+}

@@ -1,35 +1,43 @@
-// Neon Coast Cover Studio — deterministic ?shot= scenes.
-// ?shot=cover  renders a finished cover at the requested size (for the
-//               screenshot pipeline: ?shot=cover&photo=neon&caption=...
-//               &subtitle=...&layout=tilt&grade=neon&size=1920x1080)
-// ?shot=editor renders the full editor UI with a scene applied.
-// Query params: photo (sample name), caption, subtitle, badge, layout,
-// grade, size (WxH). Panels cycle the sample photos, requested one first.
-export const SHOT_SIZES = {
-  '1080x1080': [1080, 1080],
-  '1080x1350': [1080, 1350],
-  '1920x1080': [1920, 1080],
-};
+// Neon Coast Cover Studio — scene presets.
+// Each scene is one screenshot: the file it lands in, the pixel size of
+// that file, and the query string that sets the app up exactly that way.
+// The app reads the same query strings, so a scene can be re-shot by
+// opening the app with its query and capturing what it shows.
 
-export function parseShotQuery(search) {
-  const q = new URLSearchParams(search);
-  const size = SHOT_SIZES[q.get('size')] ? q.get('size') : '1080x1080';
-  return {
-    shot: q.get('shot') || '',
-    photo: q.get('photo') || 'boulevard',
-    caption: q.get('caption') || 'Neon Coast',
-    subtitle: q.get('subtitle') || 'Vice City nights',
-    badge: q.get('badge') || 'GTA VI',
-    layout: q.get('layout') || 'grid',
-    grade: q.get('grade') || 'sunset',
-    size,
-  };
-}
+const SCENES = [
+  {
+    file: '1-cover.jpg',
+    width: 1280,
+    height: 720,
+    query: '?photo=pier&title=NEON%20COAST&subtitle=where%20the%20night%20never%20ends&badge=VICE%20CITY&layout=hero&grade=neon&size=wide',
+    label: 'Widescreen hero cover, neon night grade',
+  },
+  {
+    file: '2-editor.jpg',
+    width: 1280,
+    height: 800,
+    query: '?photo=boulevard&title=NEON%20COAST&subtitle=where%20the%20night%20never%20ends&badge=VICE%20CITY&layout=grid&grade=sunset&size=square',
+    label: 'Editor view with a photo loaded',
+  },
+  {
+    file: '3-cover.jpg',
+    width: 1024,
+    height: 1280,
+    query: '?photo=neon&title=GOLDEN%20HOUR&subtitle=cruising%20down%20the%20boulevard&badge=SUNSET%20DRIVE&layout=grid&grade=golden&size=portrait',
+    label: 'Portrait grid cover, golden hour grade',
+  },
+  {
+    file: '4-cover.jpg',
+    width: 1024,
+    height: 1024,
+    query: '?photo=boulevard&title=NEON%20COAST&subtitle=where%20the%20night%20never%20ends&badge=VICE%20CITY&layout=snapshots&grade=sunset&size=square',
+    label: 'Square snapshots cover, sunset grade',
+  },
+];
 
-// Order the sample names so the requested photo is first, then the rest
-// in fixed order — multi-panel covers show several photos, not one photo
-// repeated in every panel.
-export function orderedSamples(requested, all) {
-  const rest = all.filter((n) => n !== requested);
-  return [requested, ...rest];
+function sceneByFile(file) {
+  for (const scene of SCENES) {
+    if (scene.file === file) return scene;
+  }
+  return null;
 }
