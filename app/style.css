@@ -1,0 +1,111 @@
+/* Neon Coast Cover Studio — editor chrome.
+   Dark neon UI; the cover itself is drawn on canvas, so this file only
+   styles the tool around it. System font stack, no webfonts. */
+* { box-sizing: border-box; }
+:root {
+  --bg: #0d0618;
+  --panel: #1a0f2e;
+  --panel-2: #241640;
+  --line: #3d2566;
+  --text: #f2eefc;
+  --muted: #b9a8d8;
+  --accent: #ff5e3a;
+  --accent-2: #00e5ff;
+}
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.topbar {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+  padding: 18px 22px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.topbar h1 { margin: 0; font-size: 26px; letter-spacing: 0.5px; }
+.topbar h1 span { color: var(--accent-2); }
+.tagline { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.top-actions { display: flex; gap: 8px; padding-top: 6px; }
+button, select, input[type="text"] {
+  font: inherit; color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+button { cursor: pointer; }
+button:hover:not(:disabled) { border-color: var(--accent-2); }
+button:disabled { opacity: 0.4; cursor: default; }
+button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.file-btn { display: inline-block; cursor: pointer; }
+.file-btn:hover { border-color: var(--accent-2); }
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+  padding: 18px 22px 28px;
+  align-items: start;
+}
+.stage {
+  position: relative;
+  background: #05030a;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  min-height: 320px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.stage.dropping { outline: 3px dashed var(--accent-2); outline-offset: -6px; }
+#preview { display: block; max-width: 100%; height: auto; border-radius: 4px; }
+#panelOverlay { position: absolute; inset: 14px; pointer-events: none; }
+.panel-outline {
+  position: absolute;
+  border: 2px dashed rgba(255,255,255,0.55);
+  color: #fff; font-weight: 800; font-size: 13px;
+  display: flex; align-items: flex-start; justify-content: flex-start;
+  padding: 4px 7px;
+  pointer-events: auto; cursor: pointer;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+}
+.panel-outline.selected { border: 2px solid var(--accent-2); background: rgba(0,229,255,0.12); }
+.drop-hint { color: var(--muted); font-size: 13px; margin: 0; text-align: center; }
+
+.controls { display: flex; flex-direction: column; gap: 14px; }
+.group {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.group h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+.group label { display: block; margin-bottom: 10px; font-size: 13px; color: var(--muted); }
+.group label input[type="text"], .group label select { width: 100%; margin-top: 4px; }
+.group label input[type="range"] { width: 100%; accent-color: var(--accent); }
+.val { float: right; color: var(--text); font-weight: 600; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn-row button { flex: 1 1 auto; }
+.row { display: flex; gap: 8px; align-items: center; }
+.row select { flex: 1; }
+.thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.thumb { padding: 0; overflow: hidden; border-radius: 6px; width: 64px; height: 48px; }
+.thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.hint { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+.status { color: var(--accent-2); font-size: 13px; margin: 10px 0 0; min-height: 1.4em; }
+.fineprint { color: var(--muted); font-size: 12px; margin: 0; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+}
+
+/* Screenshot mode: only the cover, edge to edge, no editor chrome. */
+body.shot-cover { background: #000; }
+body.shot-cover .topbar,
+body.shot-cover .controls,
+body.shot-cover .drop-hint { display: none; }
+body.shot-cover .layout { display: block; padding: 0; }
+body.shot-cover .stage { border: 0; border-radius: 0; padding: 0; background: #000; }
+body.shot-cover #panelOverlay { display: none; }
+body.shot-cover #preview { max-width: none; border-radius: 0; }
