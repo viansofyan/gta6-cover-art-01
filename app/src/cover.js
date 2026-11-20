@@ -45,11 +45,15 @@ function panelRects(layout, width, height) {
     const heroH = Math.round(innerH * 0.62);
     const smallH = innerH - heroH - gap;
     const smallW = Math.round((innerW - gap * 2) / 3);
+    // The last column takes the exact remainder so the three panels plus
+    // the two gaps always fill innerW: 3 * smallW + 2 * gap can drift by
+    // up to 2px from innerW when smallW is rounded.
+    const lastW = Math.max(1, innerW - (smallW + gap) * 2);
     return [
       { x: outer, y: outer, w: innerW, h: heroH, rotate: 0 },
       { x: outer, y: outer + heroH + gap, w: smallW, h: smallH, rotate: 0 },
       { x: outer + smallW + gap, y: outer + heroH + gap, w: smallW, h: smallH, rotate: 0 },
-      { x: outer + (smallW + gap) * 2, y: outer + heroH + gap, w: smallW, h: smallH, rotate: 0 },
+      { x: outer + (smallW + gap) * 2, y: outer + heroH + gap, w: lastW, h: smallH, rotate: 0 },
     ];
   }
   if (layout === 'single') {
@@ -65,14 +69,18 @@ function panelRects(layout, width, height) {
       { x: outer + innerW - w - Math.round(innerW * 0.05), y: outer + innerH - h - Math.round(innerH * 0.04), w, h, rotate: -0.035 },
     ];
   }
-  // grid: two by two poster grid.
+  // grid: two by two poster grid. The right column and bottom row take
+  // the exact remainder so 2 * halfW + gap always equals innerW (and the
+  // same for height) instead of drifting by a pixel when halfW is rounded.
   const halfW = Math.round((innerW - gap) / 2);
   const halfH = Math.round((innerH - gap) / 2);
+  const rightW = Math.max(1, innerW - halfW - gap);
+  const bottomH = Math.max(1, innerH - halfH - gap);
   return [
     { x: outer, y: outer, w: halfW, h: halfH, rotate: 0 },
-    { x: outer + halfW + gap, y: outer, w: halfW, h: halfH, rotate: 0 },
-    { x: outer, y: outer + halfH + gap, w: halfW, h: halfH, rotate: 0 },
-    { x: outer + halfW + gap, y: outer + halfH + gap, w: halfW, h: halfH, rotate: 0 },
+    { x: outer + halfW + gap, y: outer, w: rightW, h: halfH, rotate: 0 },
+    { x: outer, y: outer + halfH + gap, w: halfW, h: bottomH, rotate: 0 },
+    { x: outer + halfW + gap, y: outer + halfH + gap, w: rightW, h: bottomH, rotate: 0 },
   ];
 }
 
