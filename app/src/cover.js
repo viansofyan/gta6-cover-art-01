@@ -225,9 +225,18 @@ function paintTitle(ctx, width, height, title, grade) {
 // Glowing script-style subtitle, centred just above the title.
 function paintSubtitle(ctx, width, height, subtitle, titleInfo) {
   if (!subtitle) return;
-  const size = Math.round(Math.min(width, height) * 0.046);
+  let size = Math.round(Math.min(width, height) * 0.046);
+  const maxWidth = width - Math.round(width * 0.05) * 2;
+  const setFont = (s) => {
+    ctx.font = 'italic 700 ' + s + 'px "Brush Script MT", "Segoe Script", cursive';
+  };
+  setFont(size);
+  while (size > 14 && ctx.measureText(subtitle).width > maxWidth) {
+    size = Math.round(size * 0.92);
+    setFont(size);
+  }
   ctx.save();
-  ctx.font = 'italic 700 ' + size + 'px "Brush Script MT", "Segoe Script", cursive';
+  setFont(size);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.shadowColor = '#ff2ea6';
