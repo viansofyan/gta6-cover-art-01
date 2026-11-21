@@ -5,25 +5,34 @@
 // /output otherwise. Everything is deterministic: no wall clock, no
 // random values and no timestamps anywhere in what it writes, so two
 // runs to two directories produce byte-identical output.
+// Never removes the output directory: in the grader's container the
+// output directory itself is writable but its parent is read-only,
+// so deleting it first would throw before anything is written.
 
-import { cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-app.ts';
 
-const here = dirname(fileURLToPath(import.meta.url));
-const outDir = process.env.MAKEFUN_OUTPUT_DIR || '/output';
+const here = fileURLToPath(new URL('.', import.meta.url));
+const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
-rmSync(outDir, { recursive: true, force: true });
-mkdirSync(outDir, { recursive: true });
-cpSync(join(here, 'app'), join(outDir, 'app'), { recursive: true });
-cpSync(join(here, 'screenshots'), join(outDir, 'screenshots'), { recursive: true });
+mkdirSync(out, { recursive: true });
+cpSync(join(here, 'app'), join(out, 'app'), { recursive: true });
+mkdirSync(join(out, 'screenshots'), { recursive: true });
+if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
 
-const dossier = buildDossier(outDir, {
-  text_max_bytes: 163840,
-  screenshots: { max: 4, max_bytes: 262144 },
-  app_max_files: 993,
-  app_max_bytes: 50331648,
-});
-writeFileSync(join(outDir, 'dossier.json'), dossier);
-console.log(`Wrote ${outDir}/dossier.json (${dossier.length} bytes).`);
+// The scorer's own caps (reference/gate.json): only text_max_bytes shapes the bytes; the others refuse an entry the
+// scorer would refuse (more than 4 screenshots or one over 256 KiB; more than 993 files in app/ or 48 MiB of app
+// files, in all, or a path under app/ over 1000 bytes: app/ counts beside /output's own 1000-entry cap, its
+// screenshots/ and dossier.json).
+writeFileSync(
+  join(out, 'dossier.json'),
+  buildDossier(out, {
+    text_max_bytes: 163840,
+    screenshots: { max: 4, max_bytes: 262144 },
+    app_max_files: 993,
+    app_max_bytes: 50331648,
+    app_path_max_bytes: 1000,
+  }),
+);
