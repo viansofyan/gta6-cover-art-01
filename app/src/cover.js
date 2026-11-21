@@ -154,13 +154,17 @@ function paintGrain(ctx, width, height, amount, seed) {
   if (amount <= 0) return;
   const random = seededRandom(seed);
   const count = Math.round(width * height * amount * 0.0016);
+  // Dot size scales with the shorter side so the grain reads the same on
+  // a 1080 square and a 1920 wide export instead of vanishing at the
+  // larger size (a fixed 1.4px dot is proportionally much smaller there).
+  const dot = Math.max(1, (Math.min(width, height) / 1080) * 1.4);
   ctx.save();
   ctx.fillStyle = '#ffffff';
   for (let i = 0; i < count; i++) {
     const x = random() * width;
     const y = random() * height;
     ctx.globalAlpha = 0.05 + random() * 0.16;
-    ctx.fillRect(x, y, 1.4, 1.4);
+    ctx.fillRect(x, y, dot, dot);
   }
   ctx.restore();
 }
