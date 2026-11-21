@@ -97,15 +97,30 @@ function drawPhotoInto(ctx, image, rect, zoom, panX, panY) {
   ctx.drawImage(image, dx, dy, drawnW, drawnH);
 }
 
-// Duotone pass for the noir grade: redraw the panel region through an
-// offscreen canvas, grey it, then map dark to ink and light to paper.
-function duotonePanel(ctx, rect, ink, paper) {
-  const off = document.createElement('canvas');
-  off.width = Math.max(2, Math.round(rect.w));
-  off.height = Math.max(2, Math.round(rect.h));
-  const octx = off.getContext('2d');
-  octx.drawImage(ctx.canvas, rect.x, rect.y, rect.w, rect.h, 0, 0, off.width, off.height);
-  const data = octx.getImageData(0, 0, off.width, off.height);
+// One panel's photo painted into `ctx` at `rect`, or a dark placeholder
+// with a hint when the panel has no photo yet.
+function paintPanelPhoto(ctx, image, rect, panel) {
+  if (image && image.naturalWidth > 0) {
+    drawPhotoInto(ctx, image, rect, panel.zoom || 1, panel.panX ?? 0.5, panel.panY ?? 0.5);
+  } else {
+    const empty = ctx.createLinearGradient(rect.x, rect.y, rect.x + rect.w, rect.y + rect.h);
+    empty.addColorStop(0, '#3a2a55');
+    empty.addColorStop(1, '#1c1030');
+    ctx.fillStyle = empty;
+    ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.font = '600 ' + Math.round(Math.min(rect.w, rect.h) * 0.07) + 'px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Drop a photo here', rect.x + rect.w / 2, rect.y + rect.h / 2);
+  }
+}
+
+// Duotone pass for the noir grade: grey the pixels of an offscreen canvas,
+// then map dark to ink and light to paper. Runs on the offscreen canvas
+// only, so the caller decides where the graded result lands.
+function duotoneCanvas(octx, width, height, ink, paper) {
+  const data = octx.getImageData(0, 0, width, height);
   const inkRgb = hexToRgb(ink);
   const paperRgb = hexToRgb(paper);
   const pixels = data.data;
@@ -116,9 +131,6 @@ function duotonePanel(ctx, rect, ink, paper) {
     pixels[i + 2] = Math.round(inkRgb.b + (paperRgb.b - inkRgb.b) * grey);
   }
   octx.putImageData(data, 0, 0);
-  ctx.save();
-  ctx.drawImage(off, rect.x, rect.y, rect.w, rect.h);
-  ctx.restore();
 }
 
 function paintGrade(ctx, rect, grade) {
@@ -307,21 +319,24 @@ function drawCover(ctx, width, height, state, images) {
     ctx.rect(rect.x, rect.y, rect.w, rect.h);
     ctx.clip();
     const image = panel.photoId ? images[panel.photoId] : null;
-    if (image && image.naturalWidth > 0) {
-      drawPhotoInto(ctx, image, rect, panel.zoom || 1, panel.panX ?? 0.5, panel.panY ?? 0.5);
+    if (grade.duotone) {
+      // Duotone in the panel's local (unrotated) coordinates: render the
+      // photo onto an offscreen canvas, grade it there, then draw the
+      // graded canvas inside the rotation transform and clip, so the
+      // duotone stays aligned with the rotated photo. Sampling the main
+      // canvas here would read the axis-aligned region, which for a
+      // rotated panel includes backdrop and frame pixels outside the
+      // photo, and paint it back misaligned.
+      const off = document.createElement('canvas');
+      off.width = Math.max(2, Math.round(rect.w));
+      off.height = Math.max(2, Math.round(rect.h));
+      const octx = off.getContext('2d');
+      paintPanelPhoto(octx, image, { x: 0, y: 0, w: off.width, h: off.height }, panel);
+      duotoneCanvas(octx, off.width, off.height, grade.duotoneInk, grade.duotonePaper);
+      ctx.drawImage(off, rect.x, rect.y, rect.w, rect.h);
     } else {
-      const empty = ctx.createLinearGradient(rect.x, rect.y, rect.x + rect.w, rect.y + rect.h);
-      empty.addColorStop(0, '#3a2a55');
-      empty.addColorStop(1, '#1c1030');
-      ctx.fillStyle = empty;
-      ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
-      ctx.fillStyle = 'rgba(255,255,255,0.75)';
-      ctx.font = '600 ' + Math.round(Math.min(rect.w, rect.h) * 0.07) + 'px system-ui, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('Drop a photo here', rect.x + rect.w / 2, rect.y + rect.h / 2);
+      paintPanelPhoto(ctx, image, rect, panel);
     }
-    if (grade.duotone) duotonePanel(ctx, rect, grade.duotoneInk, grade.duotonePaper);
     paintGrade(ctx, rect, grade);
     ctx.restore();
     // Selected panel gets a bright outline so the editor can show it.
